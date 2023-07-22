@@ -1,6 +1,6 @@
 const express=require('express');
 const cors =require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app=express();
 const port=process.env.PORT || 5000;
  // middle ware
@@ -32,12 +32,36 @@ async function run() {
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
     const UserCollection=client.db("CrudPract").collection("users");
-    const user={
-        name:"Jakir Hossain",
-        email:"jakirhossainmunir79@gmail.com"
-    }
-    const result=await UserCollection.insertOne(user);
-    console.log(result);
+
+// recive data from clent side 
+app.post('/users',async(req,res)=>{
+    const user=req.body;
+    console.log(user);
+    const result=await UserCollection.insertOne(user)
+    res.send(result);
+    });
+
+    // read data from database
+
+    app.get('/users',async(req,res)=>{
+      const query={};
+      const cursor=UserCollection.find(query);
+      const users=await cursor.toArray();
+      res.send(users);
+    });
+
+    app.delete('/users/:id',async(req,res)=>{
+      const id=req.params.id;
+     // console.log('trying to delete:',id);
+     const query={_id:new ObjectId(id)}
+     const result=await UserCollection.deleteOne(query);
+     console.log(result);
+     res.send(result);
+    })
+
+
+
+
   } finally {
     // Ensures that the client will close when you finish/error
    // await client.close();
